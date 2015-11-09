@@ -121,6 +121,9 @@ class MainHandler(web.RequestHandler):
 
     def post(self):
         '''
+        Execute Python code submitted in the request body. Provide the result in the response body,
+        either as the output to "stdout" or, if it exists, the value stored in the "fujian_return"
+        variable.
         '''
         code = self.request.body
         if not isinstance(code, unicode):
@@ -140,7 +143,11 @@ class MainHandler(web.RequestHandler):
 
             self.write(post)
         else:
-            self.write(get_from_stdout())
+            if 'fujian_return' in exec_globals:
+                self.write(unicode(exec_globals['fujian_return']))
+                del exec_globals['fujian_return']
+            else:
+                self.write(get_from_stdout())
 
 
 if __name__ == "__main__":
