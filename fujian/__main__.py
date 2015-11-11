@@ -35,6 +35,8 @@ from tornado import ioloop, web
 import fujian
 
 
+_ACCESS_CONTROL_ALLOW_ORIGIN = 'http://localhost:8000'
+
 exec_globals = {'__name__': '__main__', '__builtins__': copy.deepcopy(__builtins__)}
 
 
@@ -119,7 +121,7 @@ class MainHandler(web.RequestHandler):
         '''
         '''
         self.set_header('Server', 'Fujian/{}'.format(fujian.__version__))
-        self.set_header('Access-Control-Allow-Origin', 'http://localhost:8000');
+        self.set_header('Access-Control-Allow-Origin', _ACCESS_CONTROL_ALLOW_ORIGIN)
 
     def get(self):
         '''
