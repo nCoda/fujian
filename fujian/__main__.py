@@ -32,6 +32,8 @@ import traceback
 
 from tornado import ioloop, web
 
+import fujian
+
 
 exec_globals = {'__name__': '__main__', '__builtins__': copy.deepcopy(__builtins__)}
 
@@ -112,6 +114,12 @@ def get_traceback():
 class MainHandler(web.RequestHandler):
     '''
     '''
+
+    def set_default_headers(self):
+        '''
+        '''
+        self.set_header('Server', 'Fujian/{}'.format(fujian.__version__))
+        self.set_header('Access-Control-Allow-Origin', 'http://localhost:8000');
 
     def get(self):
         '''
