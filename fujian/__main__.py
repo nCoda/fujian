@@ -56,7 +56,7 @@ class StdoutHandler(object):
         '''
         self.stuff += write_this
 
-    def get_written(self):
+    def get(self):
         '''
         '''
         return self.stuff
@@ -75,7 +75,7 @@ def get_from_stdout():
     Get what was written to stdout, with the request's exec_globals, in this request.
     '''
     local_locals = {}
-    exec_this = 'import sys\npost = sys.stdout.get_written()\ndel sys'
+    exec_this = 'import sys\npost = sys.stdout.get()\ndel sys'
     exec(exec_this, exec_globals, local_locals)
     return local_locals['post']
 
@@ -85,7 +85,7 @@ def get_from_stderr():
     Get what was written to stderr, with the request's exec_globals, in this request.
     '''
     local_locals = {}
-    exec_this = 'import sys\npost = sys.stderr.get_written()\ndel sys'
+    exec_this = 'import sys\npost = sys.stderr.get()\ndel sys'
     exec(exec_this, exec_globals, local_locals)
     return local_locals['post']
 
