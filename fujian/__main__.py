@@ -39,6 +39,12 @@ _ACCESS_CONTROL_ALLOW_ORIGIN = 'http://localhost:8000'
 
 exec_globals = {'__name__': '__main__', '__builtins__': copy.deepcopy(__builtins__)}
 
+# set the type that a string should be, according to Python 2 or 3
+if 'unicode' in dir():
+    _STR_TYPE = unicode
+else:
+    _STR_TYPE = str
+
 
 class StdoutHandler(object):
     '''
@@ -103,8 +109,8 @@ def get_traceback():
     Get a traceback of the most recent exception raised in the subinterpreter.
     '''
     typ, val, tb = sys.exc_info()
-    err_name = getattr(typ, '__name__', str(typ))
-    err_msg = str(val)
+    err_name = getattr(typ, '__name__', _STR_TYPE(typ))
+    err_msg = _STR_TYPE(val)
     err_trace = traceback.format_exception(typ, val, tb)
     err_trace = ''.join(err_trace)
     return err_trace
@@ -148,8 +154,8 @@ class FujianHandler(web.RequestHandler):
         traceback of the most recent unhandled exception.
         '''
         code = self.request.body
-        if not isinstance(code, unicode):
-            code = unicode(code)
+        if not isinstance(code, _STR_TYPE):
+            code = _STR_TYPE(code)
 
         # clear stdout, stderr, and fujian_return
         make_new_stdout()
@@ -161,11 +167,11 @@ class FujianHandler(web.RequestHandler):
             exec(code, exec_globals)
         except Exception:
             self.set_status(400)
-            post['traceback'] = unicode(get_traceback())
+            post['traceback'] = _STR_TYPE(get_traceback())
 
-        post['stdout'] = unicode(get_from_stdout())
-        post['stderr'] = unicode(get_from_stderr())
-        post['return'] = unicode(exec_globals['fujian_return'])
+        post['stdout'] = _STR_TYPE(get_from_stdout())
+        post['stderr'] = _STR_TYPE(get_from_stderr())
+        post['return'] = _STR_TYPE(exec_globals['fujian_return'])
         del exec_globals['fujian_return']
 
         self.write(post)
