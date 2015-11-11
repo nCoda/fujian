@@ -110,7 +110,7 @@ def get_traceback():
     return err_trace
 
 
-class MainHandler(web.RequestHandler):
+class FujianHandler(web.RequestHandler):
     '''
     '''
 
@@ -172,6 +172,6 @@ class MainHandler(web.RequestHandler):
 
 
 if __name__ == "__main__":
-    app = web.Application([(r'/', MainHandler),])
+    app = web.Application([(r'/', FujianHandler),])
     app.listen(1987)
     ioloop.IOLoop.current().start()
