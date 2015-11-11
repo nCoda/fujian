@@ -28,6 +28,8 @@ It's got all the tests.
 
 
 from fujian import __main__ as fujian
+import fujian as fujian_init
+import sys
 
 
 def test_stdout_handler():
@@ -39,3 +41,163 @@ def test_stdout_handler():
     assert 'what what' == handler.get()
     handler.write(' in the (censored)')
     assert 'what what in the (censored)' == handler.get()
+
+
+def test_make_new_stdout():
+    "It's a test for make_new_stdout()."
+
+    try:
+        assert 'sys' not in fujian.exec_globals
+        assert not isinstance(sys.stdout, fujian.StdoutHandler)
+        assert not isinstance(sys.stderr, fujian.StdoutHandler)
+        fujian.make_new_stdout()
+        assert 'sys' not in fujian.exec_globals
+        assert isinstance(sys.stdout, fujian.StdoutHandler)
+        assert isinstance(sys.stderr, fujian.StdoutHandler)
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+
+def test_get_from_stdout():
+    "It's a test for get_from_stdout()."
+
+    try:
+        fujian.make_new_stdout()
+        sys.stdout.write('lolz')
+        assert 'lolz' == fujian.get_from_stdout()
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+
+def test_get_from_stderr():
+    "It's a test for get_from_stderr()."
+
+    try:
+        fujian.make_new_stdout()
+        sys.stderr.write('errlolz')
+        assert 'errlolz' == fujian.get_from_stderr()
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+
+def test_myprint():
+    "It's a test for myprint(). Note that myprint() appends a newline to its input!"
+
+    really_keep_stdout = sys.__stdout__
+    try:
+        sys.__stdout__ = fujian.StdoutHandler()
+        fujian.myprint('check it out')
+        assert 'check it out\n' == sys.__stdout__.get()
+    finally:
+        sys.__stdout__ = really_keep_stdout
+
+
+def test_get_traceback():
+    "It's a test for get_traceback()."
+
+    try:
+        raise RuntimeError('I am not a tow truck.')
+    except RuntimeError:
+        pass
+    assert fujian.get_traceback().endswith('RuntimeError: I am not a tow truck.\n')
+
+
+def test_default_headers():
+    "Test for FujianHandler.set_default_headers()."
+
+    class MockHandler(object):
+        __class__ = fujian.FujianHandler
+        def __init__(self):
+            self.calls = []
+        def set_header(self, header, value):
+            self.calls.append((header, value))
+    handler = MockHandler()
+
+    fujian.FujianHandler.set_default_headers(handler)
+
+    assert 'Server' == handler.calls[0][0]
+    assert 'Fujian/{}'.format(fujian_init.__version__) == handler.calls[0][1]
+    assert 'Access-Control-Allow-Origin' == handler.calls[1][0]
+    assert fujian._ACCESS_CONTROL_ALLOW_ORIGIN == handler.calls[1][1]
+
+
+def test_get_request():
+    "It's a test for FujianHandler.get()."
+
+    class MockHandler(object):
+        __class__ = fujian.FujianHandler
+        def write(self, write_this):
+            self.wrote = write_this
+    handler = MockHandler()
+
+    fujian.FujianHandler.get(handler)
+
+    assert '' == handler.wrote
+
+
+def test_post_works():
+    "It's a test for FujianHandler.post() when the code-to-evaluate runs fine."
+
+    class MockRequest(object):
+        body = ('fujian_return = 5\n' +
+                'print("6")\n' +
+                'import sys\n'
+                'sys.stderr.write("7")'
+               )
+
+    class MockHandler(object):
+        __class__ = fujian.FujianHandler
+        request = MockRequest()
+        def write(self, write_this):
+            self.wrote = write_this
+    handler = MockHandler()
+
+    # pre- and post-condition: "fujian_return" isn't defined
+    assert 'fujian_return' not in fujian.exec_globals
+    try:
+        fujian.FujianHandler.post(handler)
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+    assert 'fujian_return' not in fujian.exec_globals
+
+    assert {'return': '5', 'stdout': '6\n', 'stderr': '7'} == handler.wrote
+
+
+def test_post_broken():
+    "It's a test for FujianHandler.post() when the code-to-evaluate messes up."
+
+    class MockRequest(object):
+        body = ('fujian_return = 5\n' +
+                'print("6")\n' +
+                'import sys\n'
+                'sys.stderr.write("7")\n' +
+                'raise RuntimeError("A")'
+               )
+
+    class MockHandler(object):
+        __class__ = fujian.FujianHandler
+        request = MockRequest()
+        def write(self, write_this):
+            self.wrote = write_this
+        def set_status(self, status_code):
+            self.status_code = status_code
+    handler = MockHandler()
+
+    # pre- and post-condition: "fujian_return" isn't defined
+    assert 'fujian_return' not in fujian.exec_globals
+    try:
+        fujian.FujianHandler.post(handler)
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+    assert 'fujian_return' not in fujian.exec_globals
+
+    assert 400 == handler.status_code
+    assert '5' == handler.wrote['return']
+    assert '6\n' == handler.wrote['stdout']
+    assert '7' == handler.wrote['stderr']
+    assert handler.wrote['traceback'].endswith('RuntimeError: A\n')
