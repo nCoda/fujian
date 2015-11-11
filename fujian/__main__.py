@@ -132,30 +132,44 @@ class MainHandler(web.RequestHandler):
         Execute Python code submitted in the request body. Provide the result in the response body,
         either as the output to "stdout" or, if it exists, the value stored in the "fujian_return"
         variable.
+
+        .. note:: The global "fujian_return" variable is set to a zero-length string before any
+            code is executed, and deleted just before sending the HTTP response.
+
+        Response Body
+        =============
+
+        If the response code is 200, it's a JSON object with three members: stdout, stderr, and
+        return. If the response code is 400 (meaning there was an unhandled exception) the object
+        also contains a "traceback" member.
+
+        All of these are strings. The "stdout" and "stderr" members are the contents of the
+        corresponding stdio streams. The "return" member is the value stored in the global
+        "fujian_return" variable at the end of the call. If present, "traceback" contains the
+        traceback of the most recent unhandled exception.
         '''
         code = self.request.body
         if not isinstance(code, unicode):
             code = unicode(code)
 
+        # clear stdout, stderr, and fujian_return
         make_new_stdout()
+        exec_globals['fujian_return'] = ''
+
+        post = {}
 
         try:
             exec(code, exec_globals)
         except Exception:
             self.set_status(400)
+            post['traceback'] = unicode(get_traceback())
 
-            post = get_from_stderr()
-            if len(post) > 0:
-                post += '\n'
-            post += get_traceback()
+        post['stdout'] = unicode(get_from_stdout())
+        post['stderr'] = unicode(get_from_stderr())
+        post['return'] = unicode(exec_globals['fujian_return'])
+        del exec_globals['fujian_return']
 
-            self.write(post)
-        else:
-            if 'fujian_return' in exec_globals:
-                self.write(unicode(exec_globals['fujian_return']))
-                del exec_globals['fujian_return']
-            else:
-                self.write(get_from_stdout())
+        self.write(post)
 
 
 if __name__ == "__main__":
