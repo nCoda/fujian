@@ -107,9 +107,6 @@ def get_traceback():
     err_msg = str(val)
     err_trace = traceback.format_exception(typ, val, tb)
     err_trace = ''.join(err_trace)
-    # js.globals['pypyjs']._lastErrorName = err_name
-    # js.globals['pypyjs']._lastErrorMessage = err_msg
-    # js.globals['pypyjs']._lastErrorTrace = err_trace
     return err_trace
 
 
