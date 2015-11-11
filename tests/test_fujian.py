@@ -98,11 +98,12 @@ def test_myprint():
 def test_get_traceback():
     "It's a test for get_traceback()."
 
+    ran_the_check = False
     try:
         raise RuntimeError('I am not a tow truck.')
     except RuntimeError:
-        pass
-    assert fujian.get_traceback().endswith('RuntimeError: I am not a tow truck.\n')
+        ran_the_check = True
+        assert fujian.get_traceback().endswith('RuntimeError: I am not a tow truck.\n')
 
 
 def test_default_headers():
