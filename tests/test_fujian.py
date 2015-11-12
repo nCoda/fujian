@@ -23,7 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #--------------------------------------------------------------------------------------------------
 '''
-It's got all the tests.
+Automated unit tests for Fujian.
 '''
 
 
@@ -248,3 +248,164 @@ def test_post_broken():
     assert '6\n' == handler.wrote['stdout']
     assert '7' == handler.wrote['stderr']
     assert handler.wrote['traceback'].endswith('RuntimeError: A\n')
+
+
+def test_open():
+    "Test for FujianWebSocketHandler.open()."
+
+    class MockHandler(object):
+        __class__ = fujian.FujianWebSocketHandler
+        def set_nodelay(self, arg):
+            self.nodelay = arg
+    handler = MockHandler()
+
+    fujian.FujianWebSocketHandler.open(handler)
+
+    assert True == handler.nodelay
+    assert True == handler._is_open
+
+
+def test_is_open():
+    "Test for FujianWebSocketHandler.is_open()."
+
+    class MockHandler(object):
+        __class__ = fujian.FujianWebSocketHandler
+        _is_open = 'four'
+    handler = MockHandler()
+
+    assert 'four' == fujian.FujianWebSocketHandler.is_open(handler)
+
+
+def test_on_close():
+    "Test for FujianWebSocketHandler.on_close()."
+
+    class MockHandler(object):
+        __class__ = fujian.FujianWebSocketHandler
+    handler = MockHandler()
+
+    fujian.FujianWebSocketHandler.on_close(handler)
+
+    assert False == handler._is_open
+
+
+def test_on_message_1():
+    "Test for FujianWebSocketHandler.on_message() when stdout has something."
+
+    code = 'print("6")'
+
+    class MockHandler(object):
+        __class__ = fujian.FujianWebSocketHandler
+        _message = None
+        def write_message(self, message):
+            self._message = message
+    handler = MockHandler()
+
+    # pre- and post-condition: "fujian_return" isn't defined
+    assert 'fujian_return' not in fujian.exec_globals
+    try:
+        fujian.FujianWebSocketHandler.on_message(handler, code)
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+    assert 'fujian_return' not in fujian.exec_globals
+
+    assert {'return': '', 'stdout': '6\n', 'stderr': ''} == handler._message
+
+
+def test_on_message_2():
+    "Test for FujianWebSocketHandler.on_message() when stderr has something."
+
+    code = 'import sys\nsys.stderr.write("check")'
+
+    class MockHandler(object):
+        __class__ = fujian.FujianWebSocketHandler
+        _message = None
+        def write_message(self, message):
+            self._message = message
+    handler = MockHandler()
+
+    # pre- and post-condition: "fujian_return" isn't defined
+    assert 'fujian_return' not in fujian.exec_globals
+    try:
+        fujian.FujianWebSocketHandler.on_message(handler, code)
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+    assert 'fujian_return' not in fujian.exec_globals
+
+    assert {'return': '', 'stdout': '', 'stderr': 'check'} == handler._message
+
+
+def test_on_message_3():
+    "Test for FujianWebSocketHandler.on_message() when fujian_return has something."
+
+    code = 'fujian_return = "seven"'
+
+    class MockHandler(object):
+        __class__ = fujian.FujianWebSocketHandler
+        _message = None
+        def write_message(self, message):
+            self._message = message
+    handler = MockHandler()
+
+    # pre- and post-condition: "fujian_return" isn't defined
+    assert 'fujian_return' not in fujian.exec_globals
+    try:
+        fujian.FujianWebSocketHandler.on_message(handler, code)
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+    assert 'fujian_return' not in fujian.exec_globals
+
+    assert {'return': 'seven', 'stdout': '', 'stderr': ''} == handler._message
+
+
+def test_on_message_4():
+    "Test for FujianWebSocketHandler.on_message() when traceback has something."
+
+    code = 'raise RuntimeError("A")'
+
+    class MockHandler(object):
+        __class__ = fujian.FujianWebSocketHandler
+        _message = None
+        def write_message(self, message):
+            self._message = message
+    handler = MockHandler()
+
+    # pre- and post-condition: "fujian_return" isn't defined
+    assert 'fujian_return' not in fujian.exec_globals
+    try:
+        fujian.FujianWebSocketHandler.on_message(handler, code)
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+    assert 'fujian_return' not in fujian.exec_globals
+
+    assert '' == handler._message['return']
+    assert '' == handler._message['stdout']
+    assert '' == handler._message['stderr']
+    assert handler._message['traceback'].endswith('RuntimeError: A\n')
+
+
+def test_on_message_5():
+    "Test for FujianWebSocketHandler.on_message() when there's nothing to return."
+
+    code = 'pass'
+
+    class MockHandler(object):
+        __class__ = fujian.FujianWebSocketHandler
+        _message = None
+        def write_message(self, message):
+            self._message = message
+    handler = MockHandler()
+
+    # pre- and post-condition: "fujian_return" isn't defined
+    assert 'fujian_return' not in fujian.exec_globals
+    try:
+        fujian.FujianWebSocketHandler.on_message(handler, code)
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+    assert 'fujian_return' not in fujian.exec_globals
+
+    assert None is handler._message

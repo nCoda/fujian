@@ -30,7 +30,7 @@ import copy
 import sys
 import traceback
 
-from tornado import ioloop, web
+from tornado import ioloop, web, websocket
 
 import fujian
 
@@ -201,7 +201,82 @@ class FujianHandler(web.RequestHandler):
         self.write(post)
 
 
+class FujianWebSocketHandler(websocket.WebSocketHandler):
+    '''
+    Allows connecting to clients with a WebSocket.
+    '''
+
+    def __init__(self, *args, **kwargs):
+        '''
+        Set the local flag to know the connection is closed. Also set global :const:`FUJIAN_WS`.
+        '''
+        self._is_open = False
+        exec_globals['FUJIAN_WS'] = self
+        websocket.WebSocketHandler.__init__(self, *args, **kwargs)
+
+    def is_open(self):
+        '''
+        Determine whether the WebSocket connection is currently open.
+
+        If there is no WebSocket currently open, any calls to :meth:`write_message` will raise a
+        :exc:`tornado.websocket.WebSocketClosedError`.
+        '''
+        return self._is_open
+
+    def open(self, **kwargs):
+        '''
+        Set the flag that avoids delaying small messages to save bandwidth. Since Fujian is intended
+        only for use on ``localhost``, any delay would be detrimental to the user experience, and
+        morever there is no reason to save bandwidth.
+
+        Also set the local flag to know the connection is open.
+        '''
+        self.set_nodelay(True)
+        self._is_open = True
+        websocket.WebSocketHandler.open(self, **kwargs)
+
+    def on_close(self):
+        '''
+        Set the local flag to know the connection is closed.
+        '''
+        self._is_open = False
+        # should we do something with self.close_code and self.close_reason?
+        websocket.WebSocketHandler.on_close(self)
+
+    def on_message(self, message):
+        '''
+        Execute the Python code of an incoming message.
+
+        This works much like :meth:`FujianHandler.post` except there may be no response. If the code
+        writes to ``stdout`` or ``stderr``, or sets the global ``fujian_return`` variable, a JSON
+        response will be sent to the client in the same way as :meth:`post`. If the code
+        execution raises an unhandled exception, a ``traceback`` member will be included, in the
+        same way as :meth:`post`.
+
+        If the code does not raise an unhandled exception, write to ``stdout`` or ``stderr``, or
+        set the global ``fujian_return`` variable, no message will be sent to the client about the
+        success or failure of code execution.
+
+        Furthermore, and quite unlike a connection to :class:`FujianHandler`, messages may be sent
+        to the client without first being requested, by any code that calls :meth:`write_message`
+        on the global :const:`FUJIAN_WS` object installed by :class:`FujianWebSocketHandler`.
+        '''
+
+        if not isinstance(message, _STR_TYPE):
+            message = _STR_TYPE(message)
+
+        post = execute_some_python(message)
+
+        if 'traceback' in post:
+            self.write_message(post)
+        elif (len(post['stdout']) > 0 or len(post['stderr']) > 0 or len(post['return']) > 0):
+            self.write_message(post)
+
+
 if __name__ == "__main__":
-    app = web.Application([(r'/', FujianHandler),])
+    app = web.Application([
+        (r'/', FujianHandler),
+        (r'/websocket/', FujianWebsocketHandler),
+    ])
     app.listen(1987)
     ioloop.IOLoop.current().start()
