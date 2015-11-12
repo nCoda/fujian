@@ -288,6 +288,20 @@ def test_on_close():
     assert False == handler._is_open
 
 
+def test_check_origin():
+    "Tests for FujianWebSocketHandler.check_origin()."
+
+    class MockHandler(object):
+        __class__ = fujian.FujianWebSocketHandler
+    handler = MockHandler()
+
+    check_origin = fujian.FujianWebSocketHandler.check_origin
+
+    assert True is check_origin(handler, 'https://localhost:77983')
+    assert True is check_origin(handler, 'http://localhost:77983')
+    assert False is check_origin(handler, 'https://bocalhost:77983')  # the bassoonist's computer
+
+
 def test_on_message_1():
     "Test for FujianWebSocketHandler.on_message() when stdout has something."
 

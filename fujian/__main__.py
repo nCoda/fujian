@@ -243,6 +243,17 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
         # should we do something with self.close_code and self.close_reason?
         websocket.WebSocketHandler.on_close(self)
 
+    def check_origin(self, origin):
+        '''
+        If supplied, Tornado uses this method to allow checking the Origin request header, to verify
+        that the request is indeed coming from somewhere we are okay with. For us that means
+        localhost, with or without HTTPS.
+        '''
+        if origin.startswith('http://localhost:') or origin.startswith('https://localhost:'):
+            return True
+        else:
+            return False
+
     def on_message(self, message):
         '''
         Execute the Python code of an incoming message.
