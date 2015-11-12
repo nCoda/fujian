@@ -276,7 +276,7 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
 if __name__ == "__main__":
     app = web.Application([
         (r'/', FujianHandler),
-        (r'/websocket/', FujianWebsocketHandler),
+        (r'/websocket/', FujianWebSocketHandler),
     ])
     app.listen(1987)
     ioloop.IOLoop.current().start()
