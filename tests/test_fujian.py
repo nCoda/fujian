@@ -106,6 +106,52 @@ def test_get_traceback():
         assert fujian.get_traceback().endswith('RuntimeError: I am not a tow truck.\n')
 
 
+def test_execute_works():
+    "Test for execute_some_python() when the code-to-evaluate runs fine."
+
+    code = ('fujian_return = 5\n' +
+            'print("6")\n' +
+            'import sys\n'
+            'sys.stderr.write("7")'
+           )
+
+    # pre- and post-condition: "fujian_return" isn't defined
+    assert 'fujian_return' not in fujian.exec_globals
+    try:
+        returns = fujian.execute_some_python(code)
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+    assert 'fujian_return' not in fujian.exec_globals
+
+    assert {'return': '5', 'stdout': '6\n', 'stderr': '7'} == returns
+
+
+def test_execute_broken():
+    "Test for execute_some_python() when the code-to-evaluate messes up."
+
+    code = ('fujian_return = 5\n' +
+            'print("6")\n' +
+            'import sys\n'
+            'sys.stderr.write("7")\n' +
+            'raise RuntimeError("A")'
+           )
+
+    # pre- and post-condition: "fujian_return" isn't defined
+    assert 'fujian_return' not in fujian.exec_globals
+    try:
+        returns = fujian.execute_some_python(code)
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+    assert 'fujian_return' not in fujian.exec_globals
+
+    assert '5' == returns['return']
+    assert '6\n' == returns['stdout']
+    assert '7' == returns['stderr']
+    assert returns['traceback'].endswith('RuntimeError: A\n')
+
+
 def test_default_headers():
     "Test for FujianHandler.set_default_headers()."
 

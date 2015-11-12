@@ -116,8 +116,44 @@ def get_traceback():
     return err_trace
 
 
+def execute_some_python(code):
+    '''
+    Executes some Python code in the "exec_globals" namespace.
+
+    :param str code: The Python code to execute.
+    :returns: A dictionary with "stdout", "stderr", "return", and possibly "traceback" keys.
+    :rtype: dict
+
+    The dictionary returned contains the values written to stdout and stderr during the code
+    execution. If a value is written to the global :var:`fujian_return` variable, that is returned
+    as the value of the "return" key. If the code raises an unhandled exception, the traceback
+    appears is the value of the "traceback" key.
+
+    .. note:: All values in the dictionary are guaranteed to be the Unicode string type appropriate
+        to the Python version in use.
+    '''
+    # clear stdout, stderr, and fujian_return
+    make_new_stdout()
+    exec_globals['fujian_return'] = ''
+
+    post = {}
+
+    try:
+        exec(code, exec_globals)
+    except Exception:
+        post['traceback'] = _STR_TYPE(get_traceback())
+
+    post['stdout'] = _STR_TYPE(get_from_stdout())
+    post['stderr'] = _STR_TYPE(get_from_stderr())
+    post['return'] = _STR_TYPE(exec_globals['fujian_return'])
+    del exec_globals['fujian_return']
+
+    return post
+
+
 class FujianHandler(web.RequestHandler):
     '''
+    Allows connecting to clients with HTTP.
     '''
 
     def set_default_headers(self):
@@ -153,26 +189,14 @@ class FujianHandler(web.RequestHandler):
         "fujian_return" variable at the end of the call. If present, "traceback" contains the
         traceback of the most recent unhandled exception.
         '''
+
         code = self.request.body
         if not isinstance(code, _STR_TYPE):
             code = _STR_TYPE(code)
 
-        # clear stdout, stderr, and fujian_return
-        make_new_stdout()
-        exec_globals['fujian_return'] = ''
-
-        post = {}
-
-        try:
-            exec(code, exec_globals)
-        except Exception:
+        post = execute_some_python(code)
+        if 'traceback' in post:
             self.set_status(400)
-            post['traceback'] = _STR_TYPE(get_traceback())
-
-        post['stdout'] = _STR_TYPE(get_from_stdout())
-        post['stderr'] = _STR_TYPE(get_from_stderr())
-        post['return'] = _STR_TYPE(exec_globals['fujian_return'])
-        del exec_globals['fujian_return']
 
         self.write(post)
 
