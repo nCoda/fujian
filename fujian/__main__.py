@@ -233,6 +233,8 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
         '''
         self.set_nodelay(True)
         self._is_open = True
+        exec_globals['FUJIAN_WS'] = self  # NOTE: do not commit this to GitHub
+        execute_some_python('import lychee.signals\nlychee.signals.set_fujian(FUJIAN_WS)')  # NOTE: do not commit this to GitHub
         websocket.WebSocketHandler.open(self, **kwargs)
 
     def on_close(self):
@@ -240,6 +242,7 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
         Set the local flag to know the connection is closed.
         '''
         self._is_open = False
+        exec_globals['FUJIAN_WS'] = None  # NOTE: do not commit this to GitHub
         # should we do something with self.close_code and self.close_reason?
         websocket.WebSocketHandler.on_close(self)
 
