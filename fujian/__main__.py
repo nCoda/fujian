@@ -252,10 +252,12 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
         that the request is indeed coming from somewhere we are okay with. For us that means
         localhost, with or without HTTPS.
         '''
-        if origin.startswith('http://localhost:') or origin.startswith('https://localhost:'):
-            return True
-        else:
-            return False
+        permitted_origins = ['http://localhost:', 'https://localhost:', 'file://']
+        for permitted_origin in permitted_origins:
+            if origin.startswith(permitted_origin):
+                return True
+
+        return False
 
     def on_message(self, message):
         '''
