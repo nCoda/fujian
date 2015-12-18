@@ -225,7 +225,8 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
         '''
         Determine whether the WebSocket connection is currently open.
 
-        If there is no WebSocket currently open, any calls to :meth:`write_message` will raise a
+        If there is no WebSocket currently open, any calls to
+        :meth:`~tornado.websocket.WebSocketHandler.write_message` will raise a
         :exc:`tornado.websocket.WebSocketClosedError`.
         '''
         return self._is_open
@@ -265,20 +266,21 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
         '''
         Execute Python code submitted in a WebSocket message.
 
-        This works much like :meth:`FujianHandler.post` except this method will not necessarily
-        produce a response to the client. If the code writes to ``stdout`` or ``stderr``, or sets
-        the global ``fujian_return`` variable, a JSON response will be sent to the client in the
-        same way as :meth:`FujianHandler.post`. If the code execution raises an unhandled exception,
-        a ``traceback`` member will be included, in the same way as :meth:`~FujianHandler.post`.
+        This works much like :meth:`~fujian.__main__.FujianHandler.post` except this method will not
+        necessarily produce a response to the client. If the code writes to ``stdout`` or ``stderr``,
+        or sets the global ``fujian_return`` variable, a JSON response will be sent to the client
+        in the same way as :meth:`~fujian.__main__.FujianHandler.post`. If the code execution raises
+        an unhandled exception, a ``traceback`` member will be included, in the same way as
+        :meth:`~fujian.__main__.FujianHandler.post`.
 
         If the code does not raise an unhandled exception, write to ``stdout`` or ``stderr``, or
         set the global ``fujian_return`` variable, no message will be sent to the client about the
         success or failure of code execution.
 
-        Furthermore, and quite unlike a connection to :class:`FujianHandler`, messages may be sent
-        to the client without first being requested. This is caused by any code that calls
-        :meth:`write_message` on the global :const:`FUJIAN_WS` object installed by
-        :class:`FujianWebSocketHandler`.
+        Furthermore, and quite unlike a connection to :class:`~fujian.__main__.FujianHandler`,
+        messages may be sent to the client without first being requested. This is caused by any
+        code that calls :meth:`~tornado.websocket.WebSocketHandler.write_message` on the global
+        :const:`FUJIAN_WS` object installed by :class:`~fujian.__main__.FujianWebSocketHandler`.
         '''
 
         if not isinstance(message, _STR_TYPE):
