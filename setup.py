@@ -45,16 +45,8 @@ class PyTest(Command):
         raise SystemExit(errno)
 
 
-_LONG_DESCRIPTION = '''
-It’s simple: Fujian accepts Python code in the request body of a PUT request, executes the code, then returns the result.
-
-The server is named after Fujian (福建) Province of the People’s Republic of China. The intention is to use it with our “lychee” software (“litchi” package on PyPI). Lychees are a fruit that grow in southern China. Fujian is a province in southern China. That’s about it.
-
-Do note that this application opens the door to a wide range of security issues, most of which we don’t plan to address. Fujian is intended for use on localhost only. Opening it up to the public Internet is a tremendously bad idea!
-
-We will migrate to PyPy3.
-'''
-
+with open('README.rst', 'r') as file_pointer:
+    _LONG_DESCRIPTION = file_pointer.read()
 
 setup(
     name = 'Fujian',
@@ -74,4 +66,16 @@ setup(
     license = 'AGPLv3+',
     keywords = 'tornado, http server, execute python',
     url = 'jameson.adjectivenoun.ca/ncoda/fujian',
+    classifiers =[
+        'Development Status :: 5 - Production/Stable',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: PyPy',
+        'Natural Language :: English,
+        'Operating System :: OS Independent',
+        'Topic :: Internet :: WWW/HTTP :: HTTP Servers',
+        'Topic :: Software Development :: Interpreters',
+    ],
 )
