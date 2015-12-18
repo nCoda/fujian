@@ -10,7 +10,9 @@ Fujian
     :target: https://coveralls.io/github/nCoda/fujian?branch=master
 .. image:: https://readthedocs.org/projects/fujian/badge/?version=latest
     :target: https://fujian.readthedocs.org/
+
 <br></br>
+
 .. image:: https://img.shields.io/pypi/v/fujian.svg
     :target: https://pypi.python.org/pypi/fujian
 .. image:: https://img.shields.io/pypi/status/fujian.svg
