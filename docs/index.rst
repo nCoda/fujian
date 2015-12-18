@@ -27,11 +27,3 @@ Helper Functions
 .. autofunction:: fujian.__main__.get_from_stderr
 .. autofunction:: fujian.__main__.get_traceback
 .. autofunction:: fujian.__main__.myprint
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
