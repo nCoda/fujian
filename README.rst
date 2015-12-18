@@ -8,6 +8,8 @@ Fujian
     :target: https://travis-ci.org/nCoda/fujian
 .. image:: https://coveralls.io/repos/nCoda/fujian/badge.svg?branch=master&service=github
     :target: https://coveralls.io/github/nCoda/fujian?branch=master
+.. image:: https://readthedocs.org/projects/fujian/badge/?version=latest
+    :target: https://fujian.readthedocs.org/
 
 It's simple: Fujian accepts Python code in the request body of a PUT request, executes the code,
 then returns the result.
