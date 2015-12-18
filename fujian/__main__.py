@@ -23,7 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #--------------------------------------------------------------------------------------------------
 '''
-This starts everything.
+Main Fujian module.
 '''
 
 import copy
@@ -48,22 +48,31 @@ else:
 
 class StdoutHandler(object):
     '''
-    This is a replacement for sys.stdout and sys.stderr that collects its output and saves it for
-    the stuff.
+    This is a replacement for :func:`sys.stdout` and :func:`sys.stderr` that collects its output
+    for retrieval with :meth:`get`.
+
+    This class supports the required :meth:`write` method for an output stream, but no output is
+    emitted under any circumstances except as returned from the :meth:`get` method.
     '''
 
     def __init__(self):
-        '''
-        '''
+        "Create a new :class:`StdoutHandler`."
         self.stuff = ''
 
     def write(self, write_this):
         '''
+        Append ``write_this`` to this :class:`StdoutHandler` instance's data buffer.
+
+        :param str write_this: Data to append.
         '''
         self.stuff += write_this
 
     def get(self):
         '''
+        Retrieve all data submitted to this :class:`StdoutHandler` with :meth:`write`.
+
+        :returns: The buffered data.
+        :rtype: str
         '''
         return self.stuff
 
@@ -118,14 +127,14 @@ def get_traceback():
 
 def execute_some_python(code):
     '''
-    Executes some Python code in the "exec_globals" namespace.
+    Execute some Python code in the "exec_globals" namespace.
 
     :param str code: The Python code to execute.
     :returns: A dictionary with "stdout", "stderr", "return", and possibly "traceback" keys.
     :rtype: dict
 
     The dictionary returned contains the values written to stdout and stderr during the code
-    execution. If a value is written to the global :var:`fujian_return` variable, that is returned
+    execution. If a value is written to the global :data:`fujian_return` variable, that is returned
     as the value of the "return" key. If the code raises an unhandled exception, the traceback
     appears is the value of the "traceback" key.
 
@@ -153,40 +162,38 @@ def execute_some_python(code):
 
 class FujianHandler(web.RequestHandler):
     '''
-    Allows connecting to clients with HTTP.
+    Connect with clients via HTTP.
     '''
 
     def set_default_headers(self):
         '''
+        Set the "Server" and "Access-Control-Allow-Origin" response headers.
         '''
         self.set_header('Server', 'Fujian/{}'.format(fujian.__version__))
         self.set_header('Access-Control-Allow-Origin', _ACCESS_CONTROL_ALLOW_ORIGIN)
 
     def get(self):
         '''
-        Basically this is a ping request.
+        Reply with an empty response body. Basically this is a ping request.
         '''
         self.write('')
 
     def post(self):
         '''
-        Execute Python code submitted in the request body. Provide the result in the response body,
-        either as the output to "stdout" or, if it exists, the value stored in the "fujian_return"
-        variable.
+        Execute Python code submitted in the request body, and return results of the computation.
 
-        .. note:: The global "fujian_return" variable is set to a zero-length string before any
-            code is executed, and deleted just before sending the HTTP response.
+        .. note:: The global :data:`fujian_return` variable is set to a zero-length string before
+            any code is executed, so it is guaranteed not to contain data from a previous request.
 
-        Response Body
-        =============
+        **Response Body**
 
-        If the response code is 200, it's a JSON object with three members: stdout, stderr, and
-        return. If the response code is 400 (meaning there was an unhandled exception) the object
-        also contains a "traceback" member.
+        If the response code is 200, it's a JSON object with three members: ``stdout``, ``stderr``,
+        and ``return``. If the response code is 400 (meaning there was an unhandled exception) the
+        object also contains a ``traceback`` member.
 
-        All of these are strings. The "stdout" and "stderr" members are the contents of the
-        corresponding stdio streams. The "return" member is the value stored in the global
-        "fujian_return" variable at the end of the call. If present, "traceback" contains the
+        All of these are strings. The ``stdout`` and ``stderr`` members are the contents of the
+        corresponding stdio streams. The ``return`` member is the value stored in the global
+        ``fujian_return`` variable at the end of the call. If present, ``traceback`` contains the
         traceback of the most recent unhandled exception.
         '''
 
@@ -203,7 +210,7 @@ class FujianHandler(web.RequestHandler):
 
 class FujianWebSocketHandler(websocket.WebSocketHandler):
     '''
-    Allows connecting to clients with a WebSocket.
+    Connect with clients via WebSocket.
     '''
 
     def __init__(self, *args, **kwargs):
@@ -218,7 +225,8 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
         '''
         Determine whether the WebSocket connection is currently open.
 
-        If there is no WebSocket currently open, any calls to :meth:`write_message` will raise a
+        If there is no WebSocket currently open, any calls to
+        :meth:`~tornado.websocket.WebSocketHandler.write_message` will raise a
         :exc:`tornado.websocket.WebSocketClosedError`.
         '''
         return self._is_open
@@ -261,21 +269,23 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
 
     def on_message(self, message):
         '''
-        Execute the Python code of an incoming message.
+        Execute Python code submitted in a WebSocket message.
 
-        This works much like :meth:`FujianHandler.post` except there may be no response. If the code
-        writes to ``stdout`` or ``stderr``, or sets the global ``fujian_return`` variable, a JSON
-        response will be sent to the client in the same way as :meth:`post`. If the code
-        execution raises an unhandled exception, a ``traceback`` member will be included, in the
-        same way as :meth:`post`.
+        This works much like :meth:`~fujian.__main__.FujianHandler.post` except this method will not
+        necessarily produce a response to the client. If the code writes to ``stdout`` or ``stderr``,
+        or sets the global ``fujian_return`` variable, a JSON response will be sent to the client
+        in the same way as :meth:`~fujian.__main__.FujianHandler.post`. If the code execution raises
+        an unhandled exception, a ``traceback`` member will be included, in the same way as
+        :meth:`~fujian.__main__.FujianHandler.post`.
 
         If the code does not raise an unhandled exception, write to ``stdout`` or ``stderr``, or
         set the global ``fujian_return`` variable, no message will be sent to the client about the
         success or failure of code execution.
 
-        Furthermore, and quite unlike a connection to :class:`FujianHandler`, messages may be sent
-        to the client without first being requested, by any code that calls :meth:`write_message`
-        on the global :const:`FUJIAN_WS` object installed by :class:`FujianWebSocketHandler`.
+        Furthermore, and quite unlike a connection to :class:`~fujian.__main__.FujianHandler`,
+        messages may be sent to the client without first being requested. This is caused by any
+        code that calls :meth:`~tornado.websocket.WebSocketHandler.write_message` on the global
+        :const:`FUJIAN_WS` object installed by :class:`~fujian.__main__.FujianWebSocketHandler`.
         '''
 
         if not isinstance(message, _STR_TYPE):
