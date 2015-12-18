@@ -62,7 +62,7 @@ setup(
     packages = ['fujian', 'tests'],
 
     install_requires = ['tornado>=4,<5'],
-    tests_require = ['pytest>2.7'],
+    tests_require = ['pytest>2.7,<3'],
 
     cmdclass = {'test': PyTest},
 
