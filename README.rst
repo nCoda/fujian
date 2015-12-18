@@ -11,7 +11,7 @@ Fujian
 .. image:: https://readthedocs.org/projects/fujian/badge/?version=latest
     :target: https://fujian.readthedocs.org/
 
-<br></br>
+PyPI:
 
 .. image:: https://img.shields.io/pypi/v/fujian.svg
     :target: https://pypi.python.org/pypi/fujian
