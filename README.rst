@@ -11,12 +11,13 @@ Fujian
 .. image:: https://readthedocs.org/projects/fujian/badge/?version=latest
     :target: https://fujian.readthedocs.org/
 
-.. image:: https://img.shields.io/pypi/v/fujian.svg
-    :target: https://pypi.python.org/pypi/fujian
-.. image:: https://img.shields.io/pypi/pyversions/fujian.svg
-.. image:: https://img.shields.io/pypi/l/fujian.svg
-.. image:: https://img.shields.io/pypi/implementation/fujian.svg
-.. image:: https://img.shields.io/pypi/status/fujian.svg
+| .. image:: https://img.shields.io/pypi/v/fujian.svg
+|     :target: https://pypi.python.org/pypi/fujian
+| .. image:: https://img.shields.io/pypi/status/fujian.svg
+| .. image:: https://img.shields.io/pypi/pyversions/fujian.svg
+| .. image:: https://img.shields.io/pypi/implementation/fujian.svg
+| .. image:: https://img.shields.io/pypi/l/fujian.svg
+
 
 It's simple: Fujian accepts Python code in the request body of a PUT request, executes the code,
 then returns the result.
