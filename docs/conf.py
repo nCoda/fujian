@@ -14,6 +14,8 @@ import fujian
 
 # -- General configuration ------------------------------------------------
 
+nitpicky = True
+
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.0'
 
@@ -87,4 +89,7 @@ htmlhelp_basename = 'Fujiandoc'
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {
+    'python': ('http://docs.python.org/', None),
+    'tornado': ('http://www.tornadoweb.org/en/stable/', None),
+}
