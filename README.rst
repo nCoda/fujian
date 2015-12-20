@@ -8,6 +8,9 @@ Fujian
     :target: https://travis-ci.org/nCoda/fujian
 .. image:: https://coveralls.io/repos/nCoda/fujian/badge.svg?branch=master&service=github
     :target: https://coveralls.io/github/nCoda/fujian?branch=master
+.. image:: https://www.quantifiedcode.com/api/v1/project/641802c5628d47be893a607492063514/badge.svg
+    :target: https://www.quantifiedcode.com/app/project/641802c5628d47be893a607492063514
+    :alt: Code issues
 .. image:: https://readthedocs.org/projects/fujian/badge/?version=latest
     :target: https://fujian.readthedocs.org/
 
