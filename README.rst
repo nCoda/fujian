@@ -6,22 +6,30 @@ Fujian
      :alt: Requirements Status
 .. image:: https://travis-ci.org/nCoda/fujian.svg?branch=master
     :target: https://travis-ci.org/nCoda/fujian
+    :alt: Continuous Integration Results
 .. image:: https://coveralls.io/repos/nCoda/fujian/badge.svg?branch=master&service=github
     :target: https://coveralls.io/github/nCoda/fujian?branch=master
+    :alt: Code coverage
 .. image:: https://www.quantifiedcode.com/api/v1/project/641802c5628d47be893a607492063514/badge.svg
     :target: https://www.quantifiedcode.com/app/project/641802c5628d47be893a607492063514
     :alt: Code issues
 .. image:: https://readthedocs.org/projects/fujian/badge/?version=latest
     :target: https://fujian.readthedocs.org/
+    :alt: Project Documentation
 
 PyPI:
 
 .. image:: https://img.shields.io/pypi/v/fujian.svg
     :target: https://pypi.python.org/pypi/fujian
+    :alt: Fujian on PyPI
 .. image:: https://img.shields.io/pypi/status/fujian.svg
+    :alt: Release status
 .. image:: https://img.shields.io/pypi/pyversions/fujian.svg
+    :alt: Compatible Python versions
 .. image:: https://img.shields.io/pypi/implementation/fujian.svg
+    :alt: Compatible Python interpreters
 .. image:: https://img.shields.io/pypi/l/fujian.svg
+    :alt: License
 
 
 It's simple: Fujian accepts Python code in the request body of a PUT request, executes the code,
