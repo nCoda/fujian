@@ -7,7 +7,7 @@
 # Filename:               fujian/__init__.py
 # Purpose:                Main initialization file.
 #
-# Copyright (C) 2015 Christopher Antila
+# Copyright (C) 2015, 2016 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -26,4 +26,4 @@
 Main initialization file.
 '''
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
