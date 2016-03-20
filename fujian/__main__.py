@@ -7,7 +7,7 @@
 # Filename:               fujian/__main__.py
 # Purpose:                This starts everything.
 #
-# Copyright (C) 2015 Christopher Antila
+# Copyright (C) 2015, 2016 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -37,7 +37,7 @@ import fujian
 
 _ACCESS_CONTROL_ALLOW_ORIGIN = 'http://localhost:8000'
 
-exec_globals = {'__name__': '__main__', '__builtins__': copy.deepcopy(__builtins__)}
+exec_globals = {'__name__': '__main__', '__builtins__': __builtins__}
 
 # set the type that a string should be, according to Python 2 or 3
 if 'unicode' in dir():
