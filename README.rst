@@ -2,11 +2,11 @@ Fujian
 ======
 
 .. image:: https://requires.io/github/nCoda/fujian/requirements.svg?branch=master
-     :target: https://requires.io/github/nCoda/fujian/requirements/?branch=master
-     :alt: Requirements Status
-.. image:: https://travis-ci.org/nCoda/fujian.svg?branch=master
-    :target: https://travis-ci.org/nCoda/fujian
-    :alt: Continuous Integration Results
+    :target: https://requires.io/github/nCoda/fujian/requirements/?branch=master
+    :alt: Requirements Status
+.. image:: https://circleci.com/gh/nCoda/fujian.svg?style=svg
+    :target: https://circleci.com/gh/nCoda/fujian
+    :alt: Tests on CircleCI
 .. image:: https://coveralls.io/repos/nCoda/fujian/badge.svg?branch=master&service=github
     :target: https://coveralls.io/github/nCoda/fujian?branch=master
     :alt: Code coverage
