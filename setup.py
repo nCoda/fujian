@@ -51,7 +51,7 @@ with open('README.rst', 'r') as file_pointer:
 setup(
     name = 'Fujian',
     version = fujian.__version__,
-    packages = ['fujian', 'tests'],
+    packages = ['fujian'],
 
     install_requires = ['tornado>=4,<5'],
     tests_require = ['pytest>2.7,<3'],
