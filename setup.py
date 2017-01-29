@@ -7,7 +7,7 @@
 # Filename:               setup.py
 # Purpose:                Configuration for installation with setuptools.
 #
-# Copyright (C) 2015 Christopher Antila
+# Copyright (C) 2015, 2017 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -60,12 +60,12 @@ setup(
 
     # metadata for upload to PyPI
     author = 'Christopher Antila',
-    author_email = 'christopher@antila.ca',
+    author_email = 'christopher.antila@ncodamusic.org',
     description = 'An HTTP server that executes Python code.',
     long_description = _LONG_DESCRIPTION,
     license = 'AGPLv3+',
     keywords = 'tornado, http server, execute python',
-    url = 'jameson.adjectivenoun.ca/ncoda/fujian',
+    url = 'https://goldman.ncodamusic.org/diffusion/FJ/',
     classifiers =[
         'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python :: 2.7',
