@@ -45,8 +45,11 @@ class PyTest(Command):
         raise SystemExit(errno)
 
 
-with open('README.rst', 'r') as file_pointer:
-    _LONG_DESCRIPTION = file_pointer.read()
+try:
+    with open('README.rst', 'r') as file_pointer:
+        _LONG_DESCRIPTION = file_pointer.read()
+except IOError:
+    _LONG_DESCRIPTION = 'An HTTP server that executes Python code.'
 
 setup(
     name = 'Fujian',
