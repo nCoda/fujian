@@ -27,10 +27,12 @@ Configuration for installation with setuptools.
 '''
 
 from setuptools import setup, Command
-import fujian  # for __version__
+from metadata import FUJIAN_METADATA
+import versioneer
 
 
 class PyTest(Command):
+    """Run the Fujian test suite."""
     user_options = []
     def initialize_options(self):
         pass
@@ -51,25 +53,30 @@ try:
 except IOError:
     _LONG_DESCRIPTION = 'An HTTP server that executes Python code.'
 
+_CMDCLASS = versioneer.get_cmdclass()
+_CMDCLASS.update({'test': PyTest})
+
 setup(
-    name = 'Fujian',
-    version = fujian.__version__,
-    packages = ['fujian'],
+    name=FUJIAN_METADATA['name'],
+    version=versioneer.get_version(),
+    packages=['fujian'],
 
-    install_requires = ['tornado>=4,<5'],
-    tests_require = ['pytest>2.7,<3'],
+    install_requires=['tornado>=4,<5'],
+    tests_require=['pytest>2.7,<3'],
 
-    cmdclass = {'test': PyTest},
+    cmdclass=_CMDCLASS,
+    # TODO: after upgrading to Versioneer 0.19:
+    # cmdclass=versioneer.get_cmdclass({'test': PyTest}),
 
     # metadata for upload to PyPI
-    author = 'Christopher Antila',
-    author_email = 'christopher.antila@ncodamusic.org',
-    description = 'An HTTP server that executes Python code.',
-    long_description = _LONG_DESCRIPTION,
-    license = 'AGPLv3+',
-    keywords = 'tornado, http server, execute python',
-    url = 'https://goldman.ncodamusic.org/diffusion/FJ/',
-    classifiers =[
+    author=FUJIAN_METADATA['author'],
+    author_email=FUJIAN_METADATA['author_email'],
+    description=FUJIAN_METADATA['description'],
+    long_description=_LONG_DESCRIPTION,
+    license=FUJIAN_METADATA['license'],
+    keywords='tornado, http server, execute python',
+    url=FUJIAN_METADATA['url'],
+    classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.4',
