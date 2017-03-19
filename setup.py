@@ -51,7 +51,7 @@ try:
     with open('README.rst', 'r') as file_pointer:
         _LONG_DESCRIPTION = file_pointer.read()
 except IOError:
-    _LONG_DESCRIPTION = 'An HTTP server that executes Python code.'
+    _LONG_DESCRIPTION = FUJIAN_METADATA['description']
 
 _CMDCLASS = versioneer.get_cmdclass()
 _CMDCLASS.update({'test': PyTest})
