@@ -29,6 +29,7 @@ Main Fujian module.
 import sys
 import traceback
 
+from lychee.workflow.session import InteractiveSession
 from tornado import ioloop, web, websocket
 
 import fujian
@@ -37,6 +38,8 @@ import fujian
 _ACCESS_CONTROL_ALLOW_ORIGIN = 'http://localhost:8000'
 
 EXEC_GLOBALS = {'__name__': '__main__', '__builtins__': __builtins__}
+
+SESSION = 'Placeholder for an InteractiveSession'
 
 # set the type that a string should be, according to Python 2 or 3
 if 'unicode' in dir():
@@ -142,6 +145,7 @@ def execute_some_python(code):
     # clear stdout, stderr, and fujian_return
     make_new_stdout()
     EXEC_GLOBALS['fujian_return'] = ''
+    EXEC_GLOBALS['session'] = SESSION
 
     post = {}
 
@@ -298,6 +302,7 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
 
 
 if __name__ == '__main__':
+    SESSION = InteractiveSession(vcs=None)
     APP = web.Application([
         (r'/', FujianHandler),
         (r'/websocket/', FujianWebSocketHandler),

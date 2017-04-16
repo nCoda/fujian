@@ -158,6 +158,34 @@ def test_execute_broken():
     assert returns['traceback'].endswith('RuntimeError: A\n')
 
 
+def test_execute_uses_session():
+    """
+    Test for execute_some_python() when the code uses (and tries to mess up) the InteractiveSession.
+    """
+    expected = 'Placeholder for an InteractiveSession\n'
+
+    # first call messes up the "session"
+    first_call = (
+        'print(str(session))\n'
+        'session = 5'
+        )
+    try:
+        first_return = fujian.execute_some_python(first_call)
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+    assert first_return['stdout'] == expected
+
+    # second call makes sure the "session" wasn't messed up
+    second_call = 'print(str(session))'
+    try:
+        second_return = fujian.execute_some_python(second_call)
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+    assert second_return['stdout'] == expected
+
+
 def test_default_headers():
     "Test for FujianHandler.set_default_headers()."
 
