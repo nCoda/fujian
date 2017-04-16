@@ -7,7 +7,7 @@
 # Filename:               fujian/__main__.py
 # Purpose:                This starts everything.
 #
-# Copyright (C) 2015, 2016 Christopher Antila
+# Copyright (C) 2015, 2016, 2017 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -26,10 +26,10 @@
 Main Fujian module.
 '''
 
-import copy
 import sys
 import traceback
 
+from lychee.workflow.session import InteractiveSession
 from tornado import ioloop, web, websocket
 
 import fujian
@@ -37,13 +37,15 @@ import fujian
 
 _ACCESS_CONTROL_ALLOW_ORIGIN = 'http://localhost:8000'
 
-exec_globals = {'__name__': '__main__', '__builtins__': __builtins__}
+EXEC_GLOBALS = {'__name__': '__main__', '__builtins__': __builtins__}
+
+SESSION = 'Placeholder for an InteractiveSession'
 
 # set the type that a string should be, according to Python 2 or 3
 if 'unicode' in dir():
-    _STR_TYPE = unicode
+    StringType = unicode
 else:
-    _STR_TYPE = str
+    StringType = str
 
 
 class StdoutHandler(object):
@@ -79,29 +81,29 @@ class StdoutHandler(object):
 
 def make_new_stdout():
     '''
-    Make a new stdout and stderr, with the request's exec_globals, for a single request.
+    Make a new stdout and stderr, with the request's EXEC_GLOBALS, for a single request.
     '''
     exec_this = 'import sys\nsys.stdout = StdoutHandler()\nsys.stderr = StdoutHandler()\ndel sys'
-    exec(exec_this, exec_globals, {'StdoutHandler': StdoutHandler})
+    exec(exec_this, EXEC_GLOBALS, {'StdoutHandler': StdoutHandler})  # pylint: disable=exec-used
 
 
 def get_from_stdout():
     '''
-    Get what was written to stdout, with the request's exec_globals, in this request.
+    Get what was written to stdout, with the request's EXEC_GLOBALS, in this request.
     '''
     local_locals = {}
     exec_this = 'import sys\npost = sys.stdout.get()\ndel sys'
-    exec(exec_this, exec_globals, local_locals)
+    exec(exec_this, EXEC_GLOBALS, local_locals)  # pylint: disable=exec-used
     return local_locals['post']
 
 
 def get_from_stderr():
     '''
-    Get what was written to stderr, with the request's exec_globals, in this request.
+    Get what was written to stderr, with the request's EXEC_GLOBALS, in this request.
     '''
     local_locals = {}
     exec_this = 'import sys\npost = sys.stderr.get()\ndel sys'
-    exec(exec_this, exec_globals, local_locals)
+    exec(exec_this, EXEC_GLOBALS, local_locals)  # pylint: disable=exec-used
     return local_locals['post']
 
 
@@ -117,17 +119,16 @@ def get_traceback():
     '''
     Get a traceback of the most recent exception raised in the subinterpreter.
     '''
-    typ, val, tb = sys.exc_info()
-    err_name = getattr(typ, '__name__', _STR_TYPE(typ))
-    err_msg = _STR_TYPE(val)
-    err_trace = traceback.format_exception(typ, val, tb)
-    err_trace = ''.join(err_trace)
+    typ, val, trace = sys.exc_info()
+    # err_name = getattr(typ, '__name__', StringType(typ))
+    # err_msg = StringType(val)
+    err_trace = ''.join(traceback.format_exception(typ, val, trace))
     return err_trace
 
 
 def execute_some_python(code):
     '''
-    Execute some Python code in the "exec_globals" namespace.
+    Execute some Python code in the "EXEC_GLOBALS" namespace.
 
     :param str code: The Python code to execute.
     :returns: A dictionary with "stdout", "stderr", "return", and possibly "traceback" keys.
@@ -143,19 +144,20 @@ def execute_some_python(code):
     '''
     # clear stdout, stderr, and fujian_return
     make_new_stdout()
-    exec_globals['fujian_return'] = ''
+    EXEC_GLOBALS['fujian_return'] = ''
+    EXEC_GLOBALS['session'] = SESSION
 
     post = {}
 
     try:
-        exec(code, exec_globals)
-    except Exception:
-        post['traceback'] = _STR_TYPE(get_traceback())
+        exec(code, EXEC_GLOBALS)  # pylint: disable=exec-used
+    except Exception:  # pylint: disable=broad-except
+        post['traceback'] = StringType(get_traceback())
 
-    post['stdout'] = _STR_TYPE(get_from_stdout())
-    post['stderr'] = _STR_TYPE(get_from_stderr())
-    post['return'] = _STR_TYPE(exec_globals['fujian_return'])
-    del exec_globals['fujian_return']
+    post['stdout'] = StringType(get_from_stdout())
+    post['stderr'] = StringType(get_from_stderr())
+    post['return'] = StringType(EXEC_GLOBALS['fujian_return'])
+    del EXEC_GLOBALS['fujian_return']
 
     return post
 
@@ -198,8 +200,8 @@ class FujianHandler(web.RequestHandler):
         '''
 
         code = self.request.body
-        if not isinstance(code, _STR_TYPE):
-            code = _STR_TYPE(code)
+        if not isinstance(code, StringType):
+            code = StringType(code)
 
         post = execute_some_python(code)
         if 'traceback' in post:
@@ -218,7 +220,7 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
         Set the local flag to know the connection is closed. Also set global :const:`FUJIAN_WS`.
         '''
         self._is_open = False
-        exec_globals['FUJIAN_WS'] = self
+        EXEC_GLOBALS['FUJIAN_WS'] = self
         websocket.WebSocketHandler.__init__(self, *args, **kwargs)
 
     def is_open(self):
@@ -241,8 +243,8 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
         '''
         self.set_nodelay(True)
         self._is_open = True
-        exec_globals['FUJIAN_WS'] = self  # NOTE: do not commit this to GitHub
-        execute_some_python('import lychee.signals\nlychee.signals.set_fujian(FUJIAN_WS)')  # NOTE: do not commit this to GitHub
+        EXEC_GLOBALS['FUJIAN_WS'] = self
+        execute_some_python('import lychee.signals\nlychee.signals.set_fujian(FUJIAN_WS)')
         websocket.WebSocketHandler.open(self, **kwargs)
 
     def on_close(self):
@@ -250,7 +252,7 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
         Set the local flag to know the connection is closed.
         '''
         self._is_open = False
-        exec_globals['FUJIAN_WS'] = None  # NOTE: do not commit this to GitHub
+        EXEC_GLOBALS['FUJIAN_WS'] = None
         # should we do something with self.close_code and self.close_reason?
         websocket.WebSocketHandler.on_close(self)
 
@@ -288,21 +290,22 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
         :const:`FUJIAN_WS` object installed by :class:`~fujian.__main__.FujianWebSocketHandler`.
         '''
 
-        if not isinstance(message, _STR_TYPE):
-            message = _STR_TYPE(message)
+        if not isinstance(message, StringType):
+            message = StringType(message)
 
         post = execute_some_python(message)
 
         if 'traceback' in post:
             self.write_message(post)
-        elif (len(post['stdout']) > 0 or len(post['stderr']) > 0 or len(post['return']) > 0):
+        elif len(post['stdout']) > 0 or len(post['stderr']) > 0 or len(post['return']) > 0:
             self.write_message(post)
 
 
-if __name__ == "__main__":
-    app = web.Application([
+if __name__ == '__main__':
+    SESSION = InteractiveSession(vcs=None)
+    APP = web.Application([
         (r'/', FujianHandler),
         (r'/websocket/', FujianWebSocketHandler),
     ])
-    app.listen(1987)
+    APP.listen(1987)
     ioloop.IOLoop.current().start()
