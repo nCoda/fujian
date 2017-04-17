@@ -32,6 +32,19 @@ import fujian
 import lychee
 
 
+def get_show_abjad(session):
+    '''
+    Returns the show_abjad() function.
+    '''
+    def show_abjad(abj_obj):
+        '''
+        A Fujian-specific replacement for Abjad's show() method that connects to Lychee.
+        '''
+        session.run_workflow(dtype='lilypond', doc=format(abj_obj))
+
+    return show_abjad
+
+
 def process_signal(ws_handler, signal, session, tempdirs):
     '''
     Do whatever is required for a signal incoming via WebSocket.
@@ -56,7 +69,7 @@ def process_signal(ws_handler, signal, session, tempdirs):
                     }))
 
             lychee.signals.outbound.CONVERSION_FINISHED.connect(the_outputter)
-            session.run_outbound(views_info=signal['payload'])  # TODO: choose section dynamically
+            session.run_outbound(views_info=signal['payload'])
 
         finally:
             session.registrar.unregister('lilypond', 'Fujian bridge')

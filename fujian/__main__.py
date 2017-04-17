@@ -157,6 +157,7 @@ def execute_some_python(code):
     make_new_stdout()
     EXEC_GLOBALS['fujian_return'] = ''
     EXEC_GLOBALS['session'] = SESSION
+    EXEC_GLOBALS['show'] = fujian.bridge.get_show_abjad(SESSION)
 
     post = {}
 
@@ -305,6 +306,7 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
             message = StringType(message)
 
         if message[0] == '{':
+            # TODO: this doesn't (yet) catch all exceptions
             fujian.bridge.process_signal(self, message, SESSION, TEMPDIRS)
         else:
             post = execute_some_python(message)
@@ -318,7 +320,16 @@ if __name__ == '__main__':
     # key is whatever; value is pathname to a directory created by mkdtemp()
     TEMPDIRS = defaultdict(make_tempdir)
     try:
+        # so that Abjad outputs to a Fujian-managed directory
+        abjad_tempdir = TEMPDIRS['abjad']
+        abjad_script = (
+            'from abjad import *\n'
+            "abjad_configuration['abjad_output_directory'] = '{0}'\n".format(abjad_tempdir)
+            )
+        execute_some_python(abjad_script)
+
         SESSION = InteractiveSession(vcs=None)
+
         APP = web.Application([
             (r'/', FujianHandler),
             (r'/websocket/', FujianWebSocketHandler),
@@ -327,4 +338,4 @@ if __name__ == '__main__':
         ioloop.IOLoop.current().start()
     finally:
         for each_dir in TEMPDIRS.itervalues():
-            shutil.rmdir(each_dir)
+            shutil.rmtree(each_dir)
