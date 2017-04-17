@@ -26,7 +26,10 @@
 Main Fujian module.
 '''
 
+from collections import defaultdict
+import shutil
 import sys
+import tempfile
 import traceback
 
 from lychee.workflow.session import InteractiveSession
@@ -38,14 +41,22 @@ import fujian
 _ACCESS_CONTROL_ALLOW_ORIGIN = 'http://localhost:8000'
 
 EXEC_GLOBALS = {'__name__': '__main__', '__builtins__': __builtins__}
-
 SESSION = 'Placeholder for an InteractiveSession'
+TEMPDIRS = 'Placeholder for the tempdirs defaultdict'
+
 
 # set the type that a string should be, according to Python 2 or 3
 if 'unicode' in dir():
     StringType = unicode
 else:
     StringType = str
+
+
+def make_tempdir():
+    '''
+    Create a new temporary directory for *Fujian*.
+    '''
+    return tempfile.mkdtemp()
 
 
 class StdoutHandler(object):
@@ -262,7 +273,7 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
         that the request is indeed coming from somewhere we are okay with. For us that means
         localhost, with or without HTTPS.
         '''
-        permitted_origins = ['http://localhost:', 'https://localhost:', 'file://']
+        permitted_origins = ('http://localhost:', 'https://localhost:', 'file://')
         for permitted_origin in permitted_origins:
             if origin.startswith(permitted_origin):
                 return True
@@ -293,19 +304,27 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
         if not isinstance(message, StringType):
             message = StringType(message)
 
-        post = execute_some_python(message)
-
-        if 'traceback' in post:
-            self.write_message(post)
-        elif len(post['stdout']) > 0 or len(post['stderr']) > 0 or len(post['return']) > 0:
-            self.write_message(post)
+        if message[0] == '{':
+            fujian.bridge.process_signal(self, message, SESSION, TEMPDIRS)
+        else:
+            post = execute_some_python(message)
+            if 'traceback' in post:
+                self.write_message(post)
+            elif len(post['stdout']) > 0 or len(post['stderr']) > 0 or len(post['return']) > 0:
+                self.write_message(post)
 
 
 if __name__ == '__main__':
-    SESSION = InteractiveSession(vcs=None)
-    APP = web.Application([
-        (r'/', FujianHandler),
-        (r'/websocket/', FujianWebSocketHandler),
-    ])
-    APP.listen(1987)
-    ioloop.IOLoop.current().start()
+    # key is whatever; value is pathname to a directory created by mkdtemp()
+    TEMPDIRS = defaultdict(make_tempdir)
+    try:
+        SESSION = InteractiveSession(vcs=None)
+        APP = web.Application([
+            (r'/', FujianHandler),
+            (r'/websocket/', FujianWebSocketHandler),
+        ])
+        APP.listen(1987)
+        ioloop.IOLoop.current().start()
+    finally:
+        for each_dir in TEMPDIRS.itervalues():
+            shutil.rmdir(each_dir)

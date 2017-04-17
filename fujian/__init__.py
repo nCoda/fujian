@@ -7,7 +7,7 @@
 # Filename:               fujian/__init__.py
 # Purpose:                Main initialization file.
 #
-# Copyright (C) 2015, 2016 Christopher Antila
+# Copyright (C) 2015, 2016, 2017 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -31,3 +31,7 @@ __version__ = '1.1.2'
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
+
+
+from . import bridge
+from . import lilypond
