@@ -61,7 +61,7 @@ setup(
     version=versioneer.get_version(),
     packages=['fujian'],
 
-    install_requires=['lychee>0.6', 'tornado>=4,<5'],
+    install_requires=['lychee>=0.6', 'tornado>=4,<5'],
     tests_require=['pytest>2.7,<3'],
 
     cmdclass=_CMDCLASS,
