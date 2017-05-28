@@ -33,14 +33,14 @@ Automated unit tests for Fujian.
 
 import sys
 
-from fujian import __main__ as fujian
+from fujian import runner
 import fujian as fujian_init
 
 
 def test_stdout_handler():
     "It's a test for the StdoutHandler class."
 
-    handler = fujian.StdoutHandler()
+    handler = runner.StdoutHandler()
     assert handler.get() == ''
     handler.write('what what')
     assert handler.get() == 'what what'
@@ -52,13 +52,13 @@ def test_make_new_stdout():
     "It's a test for make_new_stdout()."
 
     try:
-        assert 'sys' not in fujian.EXEC_GLOBALS
-        assert not isinstance(sys.stdout, fujian.StdoutHandler)
-        assert not isinstance(sys.stderr, fujian.StdoutHandler)
-        fujian.make_new_stdout()
-        assert 'sys' not in fujian.EXEC_GLOBALS
-        assert isinstance(sys.stdout, fujian.StdoutHandler)
-        assert isinstance(sys.stderr, fujian.StdoutHandler)
+        assert 'sys' not in runner.EXEC_GLOBALS
+        assert not isinstance(sys.stdout, runner.StdoutHandler)
+        assert not isinstance(sys.stderr, runner.StdoutHandler)
+        runner.make_new_stdout()
+        assert 'sys' not in runner.EXEC_GLOBALS
+        assert isinstance(sys.stdout, runner.StdoutHandler)
+        assert isinstance(sys.stderr, runner.StdoutHandler)
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -68,9 +68,9 @@ def test_get_from_stdout():
     "It's a test for get_from_stdout()."
 
     try:
-        fujian.make_new_stdout()
+        runner.make_new_stdout()
         sys.stdout.write('lolz')
-        assert fujian.get_from_stdout() == 'lolz'
+        assert runner.get_from_stdout() == 'lolz'
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -80,9 +80,9 @@ def test_get_from_stderr():
     "It's a test for get_from_stderr()."
 
     try:
-        fujian.make_new_stdout()
+        runner.make_new_stdout()
         sys.stderr.write('errlolz')
-        assert fujian.get_from_stderr() == 'errlolz'
+        assert runner.get_from_stderr() == 'errlolz'
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -93,8 +93,8 @@ def test_myprint():
 
     really_keep_stdout = sys.__stdout__
     try:
-        sys.__stdout__ = fujian.StdoutHandler()
-        fujian.myprint('check it out')
+        sys.__stdout__ = runner.StdoutHandler()
+        runner.myprint('check it out')
         assert sys.__stdout__.get() == 'check it out\n'
     finally:
         sys.__stdout__ = really_keep_stdout
@@ -108,7 +108,7 @@ def test_get_traceback():
         raise RuntimeError('I am not a tow truck.')
     except RuntimeError:
         ran_the_check = True
-        assert fujian.get_traceback().endswith('RuntimeError: I am not a tow truck.\n')
+        assert runner.get_traceback().endswith('RuntimeError: I am not a tow truck.\n')
     assert ran_the_check
 
 
@@ -122,13 +122,13 @@ def test_execute_works():
            )
 
     # pre- and post-condition: "fujian_return" isn't defined
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
     try:
-        returns = fujian.execute_some_python(code)
+        returns = runner.execute_some_python(code)
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
 
     assert {'return': '5', 'stdout': '6\n', 'stderr': '7'} == returns
 
@@ -144,13 +144,13 @@ def test_execute_broken():
            )
 
     # pre- and post-condition: "fujian_return" isn't defined
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
     try:
-        returns = fujian.execute_some_python(code)
+        returns = runner.execute_some_python(code)
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
 
     assert returns['return'] == '5'
     assert returns['stdout'] == '6\n'
@@ -170,7 +170,7 @@ def test_execute_uses_session():
         'session = 5'
         )
     try:
-        first_return = fujian.execute_some_python(first_call)
+        first_return = runner.execute_some_python(first_call)
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -179,7 +179,7 @@ def test_execute_uses_session():
     # second call makes sure the "session" wasn't messed up
     second_call = 'print(str(session))'
     try:
-        second_return = fujian.execute_some_python(second_call)
+        second_return = runner.execute_some_python(second_call)
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -190,33 +190,33 @@ def test_default_headers():
     "Test for FujianHandler.set_default_headers()."
 
     class MockHandler(object):
-        __class__ = fujian.FujianHandler
+        __class__ = runner.FujianHandler
         def __init__(self):
             self.calls = []
         def set_header(self, header, value):
             self.calls.append((header, value))
     handler = MockHandler()
 
-    fujian.FujianHandler.set_default_headers(handler)
+    runner.FujianHandler.set_default_headers(handler)
 
     assert handler.calls[0][0] == 'Server'
     assert handler.calls[0][1] == 'Fujian/{}'.format(fujian_init.__version__)
     assert handler.calls[1][0] == 'Access-Control-Allow-Origin'
-    assert handler.calls[1][1] == fujian._ACCESS_CONTROL_ALLOW_ORIGIN
+    assert handler.calls[1][1] == runner._ACCESS_CONTROL_ALLOW_ORIGIN
 
 
 def test_get_request():
     "It's a test for FujianHandler.get()."
 
     class MockHandler(object):
-        __class__ = fujian.FujianHandler
+        __class__ = runner.FujianHandler
         def __init__(self):
             self.wrote = None
         def write(self, write_this):
             self.wrote = write_this
     handler = MockHandler()
 
-    fujian.FujianHandler.get(handler)
+    runner.FujianHandler.get(handler)
 
     assert handler.wrote == ''
 
@@ -232,7 +232,7 @@ def test_post_works():
                )
 
     class MockHandler(object):
-        __class__ = fujian.FujianHandler
+        __class__ = runner.FujianHandler
         request = MockRequest()
         def __init__(self):
             self.wrote = None
@@ -241,13 +241,13 @@ def test_post_works():
     handler = MockHandler()
 
     # pre- and post-condition: "fujian_return" isn't defined
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
     try:
-        fujian.FujianHandler.post(handler)
+        runner.FujianHandler.post(handler)
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
 
     assert {'return': '5', 'stdout': '6\n', 'stderr': '7'} == handler.wrote
 
@@ -264,7 +264,7 @@ def test_post_broken():
                )
 
     class MockHandler(object):
-        __class__ = fujian.FujianHandler
+        __class__ = runner.FujianHandler
         request = MockRequest()
         def write(self, write_this):
             self.wrote = write_this
@@ -273,13 +273,13 @@ def test_post_broken():
     handler = MockHandler()
 
     # pre- and post-condition: "fujian_return" isn't defined
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
     try:
-        fujian.FujianHandler.post(handler)
+        runner.FujianHandler.post(handler)
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
 
     assert handler.status_code == 400
     assert handler.wrote['return'] == '5'
@@ -292,13 +292,13 @@ def test_open():
     "Test for FujianWebSocketHandler.open()."
 
     class MockHandler(object):
-        __class__ = fujian.FujianWebSocketHandler
+        __class__ = runner.FujianWebSocketHandler
         _is_open = False
         def set_nodelay(self, arg):
             self.nodelay = arg
     handler = MockHandler()
 
-    fujian.FujianWebSocketHandler.open(handler)
+    runner.FujianWebSocketHandler.open(handler)
 
     assert handler.nodelay is True
     assert handler._is_open is True
@@ -308,22 +308,22 @@ def test_is_open():
     "Test for FujianWebSocketHandler.is_open()."
 
     class MockHandler(object):
-        __class__ = fujian.FujianWebSocketHandler
+        __class__ = runner.FujianWebSocketHandler
         _is_open = 'four'
     handler = MockHandler()
 
-    assert fujian.FujianWebSocketHandler.is_open(handler) == 'four'
+    assert runner.FujianWebSocketHandler.is_open(handler) == 'four'
 
 
 def test_on_close():
     "Test for FujianWebSocketHandler.on_close()."
 
     class MockHandler(object):
-        __class__ = fujian.FujianWebSocketHandler
+        __class__ = runner.FujianWebSocketHandler
         _is_open = True
     handler = MockHandler()
 
-    fujian.FujianWebSocketHandler.on_close(handler)
+    runner.FujianWebSocketHandler.on_close(handler)
 
     assert handler._is_open is False
 
@@ -332,10 +332,10 @@ def test_check_origin():
     "Tests for FujianWebSocketHandler.check_origin()."
 
     class MockHandler(object):
-        __class__ = fujian.FujianWebSocketHandler
+        __class__ = runner.FujianWebSocketHandler
     handler = MockHandler()
 
-    check_origin = fujian.FujianWebSocketHandler.check_origin
+    check_origin = runner.FujianWebSocketHandler.check_origin
 
     assert check_origin(handler, 'https://localhost:77983') is True
     assert check_origin(handler, 'http://localhost:77983') is True
@@ -348,20 +348,20 @@ def test_on_message_1():
     code = 'print("6")'
 
     class MockHandler(object):
-        __class__ = fujian.FujianWebSocketHandler
+        __class__ = runner.FujianWebSocketHandler
         _message = None
         def write_message(self, message):
             self._message = message
     handler = MockHandler()
 
     # pre- and post-condition: "fujian_return" isn't defined
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
     try:
-        fujian.FujianWebSocketHandler.on_message(handler, code)
+        runner.FujianWebSocketHandler.on_message(handler, code)
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
 
     assert {'return': '', 'stdout': '6\n', 'stderr': ''} == handler._message
 
@@ -372,20 +372,20 @@ def test_on_message_2():
     code = 'import sys\nsys.stderr.write("check")'
 
     class MockHandler(object):
-        __class__ = fujian.FujianWebSocketHandler
+        __class__ = runner.FujianWebSocketHandler
         _message = None
         def write_message(self, message):
             self._message = message
     handler = MockHandler()
 
     # pre- and post-condition: "fujian_return" isn't defined
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
     try:
-        fujian.FujianWebSocketHandler.on_message(handler, code)
+        runner.FujianWebSocketHandler.on_message(handler, code)
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
 
     assert {'return': '', 'stdout': '', 'stderr': 'check'} == handler._message
 
@@ -396,20 +396,20 @@ def test_on_message_3():
     code = 'fujian_return = "seven"'
 
     class MockHandler(object):
-        __class__ = fujian.FujianWebSocketHandler
+        __class__ = runner.FujianWebSocketHandler
         _message = None
         def write_message(self, message):
             self._message = message
     handler = MockHandler()
 
     # pre- and post-condition: "fujian_return" isn't defined
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
     try:
-        fujian.FujianWebSocketHandler.on_message(handler, code)
+        runner.FujianWebSocketHandler.on_message(handler, code)
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
 
     assert {'return': 'seven', 'stdout': '', 'stderr': ''} == handler._message
 
@@ -420,20 +420,20 @@ def test_on_message_4():
     code = 'raise RuntimeError("A")'
 
     class MockHandler(object):
-        __class__ = fujian.FujianWebSocketHandler
+        __class__ = runner.FujianWebSocketHandler
         _message = None
         def write_message(self, message):
             self._message = message
     handler = MockHandler()
 
     # pre- and post-condition: "fujian_return" isn't defined
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
     try:
-        fujian.FujianWebSocketHandler.on_message(handler, code)
+        runner.FujianWebSocketHandler.on_message(handler, code)
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
 
     assert handler._message['return'] == ''
     assert handler._message['stdout'] == ''
@@ -447,19 +447,19 @@ def test_on_message_5():
     code = 'pass'
 
     class MockHandler(object):
-        __class__ = fujian.FujianWebSocketHandler
+        __class__ = runner.FujianWebSocketHandler
         _message = None
         def write_message(self, message):
             self._message = message
     handler = MockHandler()
 
     # pre- and post-condition: "fujian_return" isn't defined
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
     try:
-        fujian.FujianWebSocketHandler.on_message(handler, code)
+        runner.FujianWebSocketHandler.on_message(handler, code)
     finally:
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
-    assert 'fujian_return' not in fujian.EXEC_GLOBALS
+    assert 'fujian_return' not in runner.EXEC_GLOBALS
 
     assert None is handler._message
