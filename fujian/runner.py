@@ -226,6 +226,7 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
         '''
         Set the local flag to know the connection is closed. Also set global :const:`FUJIAN_WS`.
         '''
+        self._sections = ''
         self._is_open = False
         EXEC_GLOBALS['FUJIAN_WS'] = self
         websocket.WebSocketHandler.__init__(self, *args, **kwargs)
@@ -310,8 +311,16 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
             elif len(post['stdout']) > 0 or len(post['stderr']) > 0 or len(post['return']) > 0:
                 self.write_message(post)
 
+    def signal(self, name, **kwargs):
+        '''
+        '''
+        if name in fujian.bridge.SIGNAL_TO_HANDLER:
+            fujian.bridge.SIGNAL_TO_HANDLER[name](self, **kwargs)
+        else:
+            # TODO: raise something better
+            raise RuntimeError('Fujian asked to handle an unknown signal: {0}'.format(name))
 
-# if __name__ == '__main__':
+
 def start_fujian():
     '''
     Starts a Fujian instance.
