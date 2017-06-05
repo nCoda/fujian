@@ -313,6 +313,7 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
 
     def signal(self, name, **kwargs):
         '''
+        Call this function to handle a "signal" going from Lychee to Julius.
         '''
         if name in fujian.bridge.SIGNAL_TO_HANDLER:
             fujian.bridge.SIGNAL_TO_HANDLER[name](self, **kwargs)

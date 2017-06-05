@@ -70,24 +70,21 @@ def process_signal(ws_handler, signal, session, tempdirs):
             _RENDER_LILYPOND_PDF = False
             session.registrar.unregister('lilypond', 'Fujian bridge')
 
-        # try:
-        #     session.registrar.register('lilypond', 'Fujian bridge')
-        #     def the_outputter(**kwargs):
-        #         '''Callback for CONVERSION_FINISHED.'''
-        #         if kwargs['dtype'] == 'lilypond':
-        #             pdf_path = fujian.lilypond.render_lilypond_pdf(kwargs['document'], tempdirs)
-        #             ws_handler.write_message(json.dumps({
-        #                 'type': 'lilypond_pdf',
-        #                 'payload': pdf_path,
-        #                 'meta': signal['payload'],
-        #             }))
-        #
-        #     lychee.signals.outbound.CONVERSION_FINISHED.connect(the_outputter)
-        #     session.run_outbound(views_info=signal['payload'])
-        #
-        # finally:
-        #     session.registrar.unregister('lilypond', 'Fujian bridge')
-        #     lychee.signals.outbound.CONVERSION_FINISHED.disconnect(the_outputter)
+    elif signal['type'] == 'fujian.REGISTER_OUTBOUND_FORMAT':
+        session.registrar.register(
+            signal['payload']['dtype'],
+            signal['payload']['who'],
+            signal['payload']['runNow'],
+        )
+
+    elif signal['type'] == 'fujian.UNREGISTER_OUTBOUND_FORMAT':
+        session.registrar.unregister(
+            signal['payload']['dtype'],
+            signal['payload']['who'],
+        )
+
+    else:
+        raise RuntimeError('Fujian received an unknown signal from Julius')
 
 
 def conversion_finished(instance, dtype, document, placement, **kwargs):
