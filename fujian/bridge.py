@@ -41,7 +41,7 @@ def get_show_abjad(session):
         '''
         A Fujian-specific replacement for Abjad's show() method that connects to Lychee.
         '''
-        lilypondfile = lilypondfiletools.make_basic_lilypond_file(abj_obj)
+        lilypondfile = lilypondfiletools.LilyPondFile.new(abj_obj)
         session.run_workflow(dtype='lilypond', doc=format(lilypondfile))
 
     return show_abjad
