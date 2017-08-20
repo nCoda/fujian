@@ -26,6 +26,7 @@
 This module is a bridge from Fujian to Lychee.
 '''
 
+import datetime
 import json
 
 import fujian
@@ -50,7 +51,7 @@ def get_show_abjad(session):
     return show_abjad
 
 
-def process_signal(ws_handler, signal, session, tempdirs):
+def _process_signal(ws_handler, signal, session, tempdirs):
     '''
     Do whatever is required for a signal incoming via WebSocket.
 
@@ -83,8 +84,51 @@ def process_signal(ws_handler, signal, session, tempdirs):
             signal['payload']['who'],
         )
 
+    elif signal['type'] == 'fujian.SET_REPO_DIR':
+        session.set_repo_dir(
+            signal['payload']['repoDir'],
+            signal['payload']['runOutbound'],
+        )
+
+    elif signal['type'] == 'fujian.GET_SECTION_BY_ID':
+        if signal['payload'].get('revision'):
+            session.run_outbound(
+                views_info=signal['payload']['viewsInfo'],
+                revision=signal['payload']['revision'],
+            )
+        else:
+            session.run_outbound(
+                views_info=signal['payload']['viewsInfo'],
+            )
+
+    elif signal['type'] == 'fujian.SUBMIT_LILYPOND':
+        session.run_workflow(
+            dtype='LilyPond',
+            doc=signal['payload']['doc'],
+            sect_id=signal['payload']['sectID'],
+        )
+
     else:
         raise RuntimeError('Fujian received an unknown signal from Julius')
+
+
+def process_signal(ws_handler, signal, session, tempdirs):
+    '''
+    Do whatever is required for a signal incoming via WebSocket.
+
+    :param str signal: The encoded signal data (currently JSON object).
+    :param session: The :class:`InteractiveSession` to use.
+    :param dict tempdirs: The dictionary of temporary directories.
+    '''
+    try:
+        _process_signal(ws_handler, signal, session, tempdirs)
+    except Exception as exc:
+        redux_action = {
+            'is_fsa': True,
+            'type': 'meta.types.WRITE_STDERR',
+            'payload': 'Exception: {0}\n'.format(exc),
+        }
+        ws_handler.write_message(json.dumps(redux_action))
 
 
 def conversion_finished(instance, dtype, document, placement, **kwargs):
@@ -153,7 +197,7 @@ def conversion_errored(instance, msg=None, **kwargs):
 
     instance.write_message(json.dumps({
         'is_fsa': True,
-        'type': 'meta.types.WRITE_STDIO',
+        'type': 'meta.types.WRITE_STDERR',
         'payload': message,
     }))
 
@@ -162,7 +206,16 @@ def log_message(instance, level=None, logger=None, message=None, status=None, ti
     '''
     Converts the "LOG_MESSAGE" signal for use by Julius (not a Redux action).
     '''
-    pass
+    if status != 'success':
+        formatted_time = datetime.datetime.utcfromtimestamp(float(time)).time().isoformat()
+        message = '{time} {level} ({logger}): {message}\n'.format(
+            level=level, logger=logger, message=message, status=status, time=formatted_time,
+        )
+        instance.write_message(json.dumps({
+            'is_fsa': True,
+            'type': 'meta.types.WRITE_STDERR',
+            'payload': message,
+        }))
 
 
 SIGNAL_TO_HANDLER = {

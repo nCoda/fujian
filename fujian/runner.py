@@ -302,8 +302,15 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
             message = StringType(message)
 
         if message[0] == '{':
-            # TODO: this doesn't (yet) catch all exceptions
-            fujian.bridge.process_signal(self, message, SESSION, TEMPDIRS)
+            try:
+                fujian.bridge.process_signal(self, message, SESSION, TEMPDIRS)
+            finally:
+                stdout = StringType(get_from_stdout())
+                stderr = StringType(get_from_stderr())
+                if stdout:
+                    self.write_message('stdout: {}'.format(stdout))
+                if stderr:
+                    self.write_message('stderr: {}'.format(stderr))
         else:
             post = execute_some_python(message)
             if 'traceback' in post:
