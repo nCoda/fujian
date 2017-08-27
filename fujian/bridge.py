@@ -62,11 +62,11 @@ def _process_signal(ws_handler, signal, session, tempdirs):
     global _RENDER_LILYPOND_PDF
     signal = json.loads(signal)
 
-    if signal['type'] == 'lilypond_pdf':
+    if signal['type'] == 'fujian.RENDER_LILYPOND_PDF':
         try:
             _RENDER_LILYPOND_PDF = True
             session.registrar.register('lilypond', 'Fujian bridge')
-            session.run_outbound(views_info=signal['payload'])
+            session.run_outbound(views_info=signal.get('payload', {}).get('sectID', ''))
         finally:
             _RENDER_LILYPOND_PDF = False
             session.registrar.unregister('lilypond', 'Fujian bridge')
@@ -176,7 +176,7 @@ def conversion_finished(instance, dtype, document, placement, **kwargs):
         instance.write_message(json.dumps(redux_action))
 
         if dtype == 'lilypond' and _RENDER_LILYPOND_PDF:
-            pdf_path = fujian.lilypond.render_lilypond_pdf(kwargs['document'], tempdirs)
+            pdf_path = fujian.lilypond.render_lilypond_pdf(document, kwargs['tempdirs'])
             redux_action = {
                 'is_fsa': True,
                 'type': 'lilypond.types.UPDATE_PDF',
