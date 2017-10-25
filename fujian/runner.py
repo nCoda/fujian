@@ -325,7 +325,7 @@ def start_fujian():
         abjad_tempdir = TEMPDIRS['abjad']
         abjad_script = (
             'from abjad import *\n'
-            "monkey_patch = lambda self: '2.19.65'\n"
+            "monkey_patch = lambda self: '2.18.2'\n"
             'systemtools.AbjadConfiguration.get_lilypond_version_string = monkey_patch\n'
             "abjad_configuration['abjad_output_directory'] = '{0}'\n".format(abjad_tempdir)
             )
