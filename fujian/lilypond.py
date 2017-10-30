@@ -32,7 +32,7 @@ import subprocess
 import sys
 
 _LY_DEFAULT_ON_LINUX = '/usr/bin/lilypond'
-_LY_DEFAULT_ON_MACOS = '/Applications/LilyPond.app/Contents/Resources/bin/lilypond'
+_LY_DEFAULT_ON_MACOS = 'LilyPond.app/Contents/Resources/bin/lilypond'
 _LY_DEFAULT_ON_WINDOWS = 'C:\\Program Files (x86)\\LilyPond\\Resources\\usr\\bin\\lilypond.exe'
 
 
