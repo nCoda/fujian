@@ -226,6 +226,7 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
         '''
         Set the local flag to know the connection is closed. Also set global :const:`FUJIAN_WS`.
         '''
+        self._sections = ''
         self._is_open = False
         EXEC_GLOBALS['FUJIAN_WS'] = self
         websocket.WebSocketHandler.__init__(self, *args, **kwargs)
@@ -301,8 +302,15 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
             message = StringType(message)
 
         if message[0] == '{':
-            # TODO: this doesn't (yet) catch all exceptions
-            fujian.bridge.process_signal(self, message, SESSION, TEMPDIRS)
+            try:
+                fujian.bridge.process_signal(self, message, SESSION, TEMPDIRS)
+            finally:
+                stdout = StringType(get_from_stdout())
+                stderr = StringType(get_from_stderr())
+                if stdout:
+                    self.write_message('stdout: {}'.format(stdout))
+                if stderr:
+                    self.write_message('stderr: {}'.format(stderr))
         else:
             post = execute_some_python(message)
             if 'traceback' in post:
@@ -310,8 +318,17 @@ class FujianWebSocketHandler(websocket.WebSocketHandler):
             elif len(post['stdout']) > 0 or len(post['stderr']) > 0 or len(post['return']) > 0:
                 self.write_message(post)
 
+    def signal(self, name, **kwargs):
+        '''
+        Call this function to handle a "signal" going from Lychee to Julius.
+        '''
+        if name in fujian.bridge.SIGNAL_TO_HANDLER:
+            fujian.bridge.SIGNAL_TO_HANDLER[name](self, tempdirs=TEMPDIRS, **kwargs)
+        else:
+            # TODO: raise something better
+            raise RuntimeError('Fujian asked to handle an unknown signal: {0}'.format(name))
 
-# if __name__ == '__main__':
+
 def start_fujian():
     '''
     Starts a Fujian instance.
