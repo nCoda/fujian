@@ -108,6 +108,19 @@ def _process_signal(ws_handler, signal, session, tempdirs):
             sect_id=signal['payload']['sectID'],
         )
 
+    elif signal['type'] == 'fujian.SAVE_TEXT_EDITOR':
+        action = {'is_fsa': True, 'type': 'fujian.SAVE_COMPLETED'}
+        try:
+            action['payload'] = session.save_text_editor(
+                sect_id=signal['payload']['sectID'],
+                dtype=signal['payload']['key'],
+                doc=signal['payload']['value'],
+            )
+        except Error:
+            action['error'] = True
+        finally:
+            ws_handler.write_message(json.dumps(action))
+
     else:
         raise RuntimeError('Fujian received an unknown signal from Julius')
 
