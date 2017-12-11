@@ -116,7 +116,7 @@ def _process_signal(ws_handler, signal, session, tempdirs):
                 dtype=signal['payload']['key'],
                 doc=signal['payload']['value'],
             )
-        except Error:
+        except Exception:
             action['error'] = True
         finally:
             ws_handler.write_message(json.dumps(action))
