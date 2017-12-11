@@ -109,9 +109,16 @@ def _process_signal(ws_handler, signal, session, tempdirs):
         )
 
     elif signal['type'] == 'fujian.SAVE_TEXT_EDITOR':
-        action = {'is_fsa': True, 'type': 'fujian.SAVE_COMPLETED'}
+        action = {
+            'is_fsa': True,
+            'type': 'fujian.SAVE_COMPLETED',
+            'payload': {
+                'key': signal['payload']['key'],
+                'sectID': signal['payload']['sectID'],
+            },
+        }
         try:
-            action['payload'] = session.save_text_editor(
+            session.save_text_editor(
                 sect_id=signal['payload']['sectID'],
                 dtype=signal['payload']['key'],
                 doc=signal['payload']['value'],
