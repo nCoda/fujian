@@ -1,0 +1,34 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:2.7
+    steps:
+      - checkout
+      - run:
+          name: Set permissions so the cache works.
+          command: |
+            sudo chown -R circleci:circleci /usr/local/bin
+            sudo chown -R circleci:circleci /usr/local/lib/python2.7/site-packages
+      - restore_cache:
+          key: v1-venv-{{ checksum "setup.py" }}
+      - run:
+          name: Install dependencies.
+          command: |
+            sudo pip install -r requirements.txt
+      - save_cache:
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python2.7/site-packages"
+          key: v1-venv-{{ checksum "setup.py" }}
+          when: on_success
+      - run:
+          name: Make additional files for the tests.
+          command: |
+            mkdir -p test_results/junit
+      - run:
+          name: Run the tests.
+          command: py.test --cov=fujian --junit-xml=test_results/junit/junit.xml
+      - store_test-results:
+          path: test_results
