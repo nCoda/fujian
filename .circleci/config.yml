@@ -11,7 +11,7 @@ jobs:
             sudo chown -R circleci:circleci /usr/local/bin
             sudo chown -R circleci:circleci /usr/local/lib/python2.7/site-packages
       - restore_cache:
-          key: v1-venv-{{ checksum "setup.py" }}
+          key: v1-venv-{{ checksum "setup.py" }}-{{ checksum "requirements.txt" }}
       - run:
           name: Install dependencies.
           command: |
@@ -22,7 +22,7 @@ jobs:
             - ".venv"
             - "/usr/local/bin"
             - "/usr/local/lib/python2.7/site-packages"
-          key: v1-venv-{{ checksum "setup.py" }}
+          key: v1-venv-{{ checksum "setup.py" }}-{{ checksum "requirements.txt" }}
           when: on_success
       - run:
           name: Make additional files for the tests.
